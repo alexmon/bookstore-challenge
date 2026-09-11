@@ -68,3 +68,6 @@ A separate Dockerfile for development
 
 ### 4.5 An OpenAPI documentation [severity:low]
 
+### 4.6 No CI setup [severity:critical]
+
+
