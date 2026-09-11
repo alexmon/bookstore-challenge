@@ -12,7 +12,7 @@ A simple REST API for managing a bookstore — authors, books, and loans.
 
 1. Clone the repository
 2. Copy the environment file: `cp .env.example .env`
-3. Start the containers: `docker-compose up -d --build`
+3. Start the containers: `docker compose up -d --build`
 4. Install dependencies: `docker exec -it bookstore_api composer install`
 5. Generate app key: `docker exec -it bookstore_api php artisan key:generate`
 6. Run migrations: `docker exec -it bookstore_api php artisan migrate`
