@@ -70,4 +70,9 @@ A separate Dockerfile for development
 
 ### 4.6 No CI setup [severity:critical]
 
+### 4.7 No strict types [severity:high]
+
+### 4.8 Static analysis tool [severity:high]
+
+
 
