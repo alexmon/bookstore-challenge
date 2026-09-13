@@ -22,7 +22,7 @@ A simple REST API for managing a bookstore — authors, books, and loans.
 ### Running Tests
 
 ```bash
-docker exec -it bookstore_api ./vendor/bin/phpunit
+docker exec -it bookstore_test ./vendor/bin/phpunit --testdox
 ```
 
 ---

@@ -1,14 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Author;
+use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQuery;
+use BookStoreAPI\BookStore\Domain\Models\AuthorEntity;
+use BookStoreAPI\BookStore\Infrastructure\Http\ViewModels\ListAuthorsViewModel;
+use BookStoreAPI\SharedKernel\Domain\Bus\QueryBus\QueryBus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
 
 class AuthorController extends Controller
 {
+    public function __construct(
+        private readonly QueryBus $queryBus,
+    ) {
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -25,8 +36,11 @@ class AuthorController extends Controller
 
     public function index(): JsonResponse
     {
-        $authors = Author::all();
+        /** @var AuthorEntity[] $authors */
+        $authors = $this->queryBus->handle(new ListAuthorsQuery());
 
-        return response()->json(['data' => $authors], 200);
+        $viewModel = new ListAuthorsViewModel($authors);
+
+        return response()->json(['data' => $viewModel->render()], 200);
     }
 }

@@ -30,5 +30,13 @@ services:
     volumes:
       - bookstore_data:/var/lib/mysql
 
+  bookstore_test:
+    build: .
+    container_name: bookstore_test
+    ports:
+      - "8081:80"
+    volumes:
+      - .:/var/www/html
+
 volumes:
   bookstore_data:

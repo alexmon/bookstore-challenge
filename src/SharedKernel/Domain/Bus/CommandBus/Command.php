@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+namespace BookStoreAPI\SharedKernel\Domain\Bus\CommandBus;
+
+interface Command
+{
+}
