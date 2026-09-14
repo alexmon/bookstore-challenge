@@ -4,34 +4,46 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Author;
+use BookStoreAPI\BookStore\Application\Commands\CreateAuthor\CreateAuthorCommand;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQuery;
 use BookStoreAPI\BookStore\Domain\Models\AuthorEntity;
+use BookStoreAPI\BookStore\Infrastructure\Http\ViewModels\CreateAuthorViewModel;
 use BookStoreAPI\BookStore\Infrastructure\Http\ViewModels\ListAuthorsViewModel;
+use BookStoreAPI\SharedKernel\Domain\Bus\CommandBus\CommandBus;
 use BookStoreAPI\SharedKernel\Domain\Bus\QueryBus\QueryBus;
+use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Ramsey\Uuid\Uuid;
 
 class AuthorController extends Controller
 {
     public function __construct(
         private readonly QueryBus $queryBus,
+        private readonly CommandBus $commandBus,
     ) {
     }
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $name = $request->input('name', null);
 
-        $author = new Author();
-        $author->uuid = Uuid::uuid4()->toString();
-        $author->name = $validated['name'];
-        $author->save();
+        $command = new CreateAuthorCommand(
+            name: $name,
+        );
 
-        return response()->json($author, 201);
+        try {
+            $this->commandBus->handle($command);
+        } catch (ValidationException $e) {
+            // TODO: log the validation exception
+
+            throw $e;
+        }
+
+        /** @var AuthorEntity $author */
+        $author = $command->getResult();
+        $viewModel = new CreateAuthorViewModel($author);
+
+        return response()->json($viewModel->render(), 201);
     }
 
     public function index(): JsonResponse

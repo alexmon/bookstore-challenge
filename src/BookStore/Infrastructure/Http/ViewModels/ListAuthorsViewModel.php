@@ -15,6 +15,14 @@ class ListAuthorsViewModel implements ViewModel
     ) {
     }
 
+    /**
+     * @return array<int, {
+     *     'uuid': string,
+     *     'name': string,
+     *     'created_at': string,
+     *     'updated_at': string,
+     * }>
+     */
     public function render(): array
     {
         return \array_map(

@@ -31,4 +31,11 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(201);
     }
+
+    public function test_cannot_create_author_without_name(): void
+    {
+        $response = $this->postJson('/api/authors', []);
+
+        $response->assertStatus(422);
+    }
 }
