@@ -6,8 +6,7 @@ namespace BookStoreAPI\BookStore\Domain\Models;
 
 use BookStoreAPI\BookStore\Domain\Models\AuthorId;
 use BookStoreAPI\BookStore\Domain\Models\BookId;
-use BookStoreAPI\BookStore\Domain\Models\Isbn;
-
+use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 /**
  * Book root aggregate
  */

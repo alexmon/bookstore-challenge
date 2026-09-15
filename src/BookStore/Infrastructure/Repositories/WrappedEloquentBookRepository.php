@@ -6,10 +6,12 @@ namespace BookStoreAPI\BookStore\Infrastructure\Repositories;
 
 use App\Models\Author;
 use App\Models\Book;
+use BookStoreAPI\BookStore\Domain\Exceptions\AuthorNotFoundException;
+use BookStoreAPI\BookStore\Domain\Models\AuthorId;
 use BookStoreAPI\BookStore\Domain\Models\BookEntity;
 use BookStoreAPI\BookStore\Domain\Models\BookId;
 use BookStoreAPI\BookStore\Domain\Models\BookRepository;
-use BookStoreAPI\BookStore\Domain\Models\Isbn;
+use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 
 class WrappedEloquentBookRepository implements BookRepository
 {
@@ -18,14 +20,14 @@ class WrappedEloquentBookRepository implements BookRepository
      */
     public function findAll(): array
     {
-        $books = Book::all();
+        $books = Book::with('author')->all();
         $bookEntities = [];
         foreach ($books as $book) {
             $bookEntities[] = new BookEntity(
                 new BookId($book->uuid),
                 $book->title,
                 new Isbn($book->isbn),
-                $book->author_id,
+                new AuthorId($book->author->uuid),
                 $book->is_active,
                 \DateTimeImmutable::createFromInterface($book->created_at),
                 \DateTimeImmutable::createFromInterface($book->updated_at),
@@ -36,7 +38,7 @@ class WrappedEloquentBookRepository implements BookRepository
 
     public function findById(BookId $id): ?BookEntity
     {
-        $book = Book::where('uuid', $id->getValue())->first();
+        $book = Book::with('author')->where('uuid', $id->getValue())->first();
         if ($book === null) {
             return null;
         }
@@ -44,8 +46,8 @@ class WrappedEloquentBookRepository implements BookRepository
             new BookId($book->uuid),
             $book->title,
             new Isbn($book->isbn),
-            $book->author_id,
-            $book->is_active,
+            new AuthorId($book->author->uuid),
+            (bool) $book->is_active,
             \DateTimeImmutable::createFromInterface($book->created_at),
             \DateTimeImmutable::createFromInterface($book->updated_at),
         );
@@ -58,9 +60,9 @@ class WrappedEloquentBookRepository implements BookRepository
         if ($book->getAuthor() !== null) {
            $eloquentAuthor = Author::where('uuid', $book->getAuthor()->getValue())->first();
            if ($eloquentAuthor === null) {
-               throw new \DomainException('Author not found');
+               throw new AuthorNotFoundException;
            }
-           $eloquentBook->author = $eloquentAuthor->id;
+           $eloquentBook->author_id = $eloquentAuthor->id;
         }
         $eloquentBook->uuid = $book->getId()->getValue();
         $eloquentBook->title = $book->getTitle();

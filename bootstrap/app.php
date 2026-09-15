@@ -1,6 +1,8 @@
 <?php
 
 use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
+use BookStoreAPI\SharedKernel\Infrastructure\Http\Middlewares\CorrelationIdMiddleware;
+use BookStoreAPI\SharedKernel\Infrastructure\Http\Middlewares\LogContextMiddleware;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,7 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+       $middleware->append(CorrelationIdMiddleware::class);
+       $middleware->append(LogContextMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Force JSON for all API routes (or all requests, your call)
@@ -33,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'message' => $e->getMessage(),
                     'errors' => $e->getErrors(),
+                    'correlation_id' => $request->attributes->get('correlationId'),
                 ], 422);
             }
         });
@@ -47,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'message' => $e->getMessage() ?: 'Error',
+                    'correlation_id' => $request->attributes->get('correlationId'),
                 ], $e->getStatusCode());
             }
         });
@@ -58,6 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => app()->environment('production')
                         ? 'Server Error'
                         : $e->getMessage(),
+                    'correlation_id' => $request->attributes->get('correlationId'),
                 ], 500);
             }
         });

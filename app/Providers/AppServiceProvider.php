@@ -6,6 +6,12 @@ namespace App\Providers;
 
 use BookStoreAPI\BookStore\Application\Commands\CreateAuthor\CreateAuthorCommand;
 use BookStoreAPI\BookStore\Application\Commands\CreateAuthor\CreateAuthorCommandHandler;
+use BookStoreAPI\BookStore\Application\Commands\CreateBook\CreateBookCommand;
+use BookStoreAPI\BookStore\Application\Commands\CreateBook\CreateBookCommandHandler;
+use BookStoreAPI\BookStore\Application\Queries\FetchAuthor\FetchAuthorQuery;
+use BookStoreAPI\BookStore\Application\Queries\FetchAuthor\FetchAuthorQueryHandler;
+use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQuery;
+use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQueryHandler;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQuery;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQueryHandler;
 use BookStoreAPI\BookStore\Domain\Models\AuthorRepository;
@@ -47,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
                                 // Mapping of command classes to their respective handlers goes here.
                                 // TODO: apply NamingLocator for automatic handler resolution.
                                 CreateAuthorCommand::class => CreateAuthorCommandHandler::class,
+                                CreateBookCommand::class => CreateBookCommandHandler::class,
                             ]
                         ),
                         new HandleInflector()
@@ -67,6 +74,8 @@ class AppServiceProvider extends ServiceProvider
                                 // Mapping of query classes to their respective handlers goes here.
                                 // TODO: apply NamingLocator for automatic handler resolution.
                                 ListAuthorsQuery::class => ListAuthorsQueryHandler::class,
+                                FetchBookQuery::class => FetchBookQueryHandler::class,
+                                FetchAuthorQuery::class => FetchAuthorQueryHandler::class,
                             ]
                         ),
                         new HandleInflector()

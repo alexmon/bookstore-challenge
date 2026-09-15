@@ -6,7 +6,7 @@ namespace Tests\Unit\BookStore\Domain\Models;
 
 use BookStoreAPI\BookStore\Domain\Models\BookEntity;
 use BookStoreAPI\BookStore\Domain\Models\BookId;
-use BookStoreAPI\BookStore\Domain\Models\Isbn;
+use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 use PHPUnit\Framework\TestCase;
 
 class BookEntityTest extends TestCase

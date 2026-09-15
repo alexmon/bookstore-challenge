@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BookStoreAPI\BookStore\Domain\Models;
 
+use BookStoreAPI\BookStore\Domain\Exceptions\InvalidAuthorIdException;
 use Ramsey\Uuid\Uuid;
 
 /**
@@ -14,7 +15,7 @@ class AuthorId implements \Stringable
     public function __construct(private string $id)
     {
         if (!Uuid::isValid($id)) {
-            throw new \InvalidArgumentException("Invalid UUID string: $id");
+            throw new InvalidAuthorIdException;
         }
     }
 

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\BookStore\Domain\Models;
+namespace Tests\Unit\SharedKernel\Domain\Models;
 
-use BookStoreAPI\BookStore\Domain\Models\Isbn;
+use BookStoreAPI\SharedKernel\Domain\Exceptions\InvalidISBNException;
+use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 use PHPUnit\Framework\TestCase;
 
 class IsbnTest extends TestCase
@@ -17,7 +18,7 @@ class IsbnTest extends TestCase
 
     public function testInvalidIsbn(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidISBNException::class);
         new Isbn('invalid-isbn');
     }
 }

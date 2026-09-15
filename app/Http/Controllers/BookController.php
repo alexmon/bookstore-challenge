@@ -6,37 +6,83 @@ namespace App\Http\Controllers;
 
 use App\Models\Author;
 use App\Models\Book;
+use BookStoreAPI\BookStore\Application\Commands\CreateBook\CreateBookCommand;
+use BookStoreAPI\BookStore\Application\Queries\FetchAuthor\FetchAuthorQuery;
+use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQuery;
+use BookStoreAPI\BookStore\Domain\Exceptions\AuthorNotFoundException;
+use BookStoreAPI\BookStore\Domain\Exceptions\InvalidAuthorIdException;
+use BookStoreAPI\BookStore\Domain\Exceptions\InvalidBookIdException;
+use BookStoreAPI\BookStore\Domain\Models\AuthorEntity;
+use BookStoreAPI\BookStore\Domain\Models\BookEntity;
+use BookStoreAPI\BookStore\Infrastructure\Http\ViewModels\CreateBookViewModel;
+use BookStoreAPI\BookStore\Infrastructure\Http\ViewModels\FetchBookViewModel;
+use BookStoreAPI\SharedKernel\Domain\Bus\CommandBus\CommandBus;
+use BookStoreAPI\SharedKernel\Domain\Bus\QueryBus\QueryBus;
+use BookStoreAPI\SharedKernel\Domain\Exceptions\InvalidISBNException;
+use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class BookController extends Controller
 {
+    public function __construct(
+        private CommandBus $commandBus,
+        private QueryBus $queryBus,
+    ) {}
+
+    /**
+     * @throws ValidationException|UnprocessableEntityHttpException
+     */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'isbn' => 'required|string|max:20',
-            'author_uuid' => 'required|string',
-        ]);
+        $createBookCommand = new CreateBookCommand(
+            title: $request->input('title', null),
+            isbn: $request->input('isbn', null),
+            authorUuid: $request->input('author_uuid', null),
+        );
 
-        $author = Author::where('uuid', $validated['author_uuid'])->first();
+        try {
+            $this->commandBus->handle($createBookCommand);
+        } catch (ValidationException $e) {
+            Log::error('Create book validation error', ['exception' => $e]);
 
-        $book = new Book();
-        $book->uuid = Uuid::uuid4()->toString();
-        $book->title = $validated['title'];
-        $book->isbn = $validated['isbn'];
-        $book->author_id = $author->id;
-        $book->is_active = true;
-        $book->save();
+            throw $e;
+        } catch (InvalidAuthorIdException $e) {
+            Log::error('Invalid author ID', ['exception' => $e]);
 
-        $book->load('author');
+            throw new UnprocessableEntityHttpException('Invalid author ID.', $e);
+        } catch (AuthorNotFoundException $e) {
+            Log::error('Author not found', ['exception' => $e]);
 
-        return response()->json($book, 201);
+            throw new UnprocessableEntityHttpException('Author not found.', $e);
+        } catch (InvalidISBNException $e) {
+            Log::error('Invalid ISBN', ['exception' => $e]);
+
+            throw new UnprocessableEntityHttpException('Invalid ISBN.', $e);
+        }
+
+        /** @var array{book: BookEntity, author: AuthorEntity} $result */
+        $result = $createBookCommand->getResult();
+        $book = $result['book'];
+        $author = $result['author'];
+
+        $viewModel = new CreateBookViewModel(
+            book: $book,
+            author: $author,
+        );
+
+        return response()->json($viewModel->render(), 201);
     }
 
+    /**
+     * TODO: add caching and pagination
+     */
     public function index(Request $request): JsonResponse
     {
+        // NOTE: eager loading we are OK
         $query = Book::with('author');
 
         if ($request->has('search')) {
@@ -59,14 +105,51 @@ class BookController extends Controller
         return response()->json(['data' => $books], 200);
     }
 
+    /**
+     * @throws ValidationException|UnprocessableEntityHttpException|NotFoundHttpException
+     */
     public function show(string $uuid): JsonResponse
     {
-        $book = Book::with('author')->where('uuid', $uuid)->first();
+        try {
+            /** @var BookEntity|null $book */
+            $book = $this->queryBus->handle(new FetchBookQuery($uuid));
+        } catch (InvalidBookIdException $e) {
+            Log::error('Invalid book ID', ['exception' => $e]);
 
-        if (!$book) {
-            return response()->json(['message' => 'Book not found.'], 404);
+            throw new UnprocessableEntityHttpException('Invalid book ID.', $e);
+        } catch (ValidationException $e) {
+            Log::error('Validation error', ['exception' => $e]);
+
+            throw $e;
         }
 
-        return response()->json($book, 200);
+        if (null === $book) {
+            throw new NotFoundHttpException('Book not found.');
+        }
+
+        try {
+            // TODO: should allow pass AuthorId as argument type?
+            /** @var AuthorEntity|null $author */
+            $author = $this->queryBus->handle(new FetchAuthorQuery($book->getAuthor()->getValue()));
+        } catch (InvalidAuthorIdException $e) {
+            Log::error('Invalid author ID', ['exception' => $e]);
+
+            throw new UnprocessableEntityHttpException('Invalid author ID.', $e);
+        } catch (ValidationException $e) {
+            Log::error('Validation error', ['exception' => $e]);
+
+            throw $e;
+        }
+
+        if (null === $author) {
+            Log::warning('Author not found for book', ['book_uuid' => $book->getId()->getValue()]);
+        }
+
+        $viewModel = new FetchBookViewModel(
+            book: $book,
+            author: $author,
+        );
+
+        return response()->json($viewModel->render(), 200);
     }
 }

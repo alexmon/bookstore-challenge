@@ -11,11 +11,11 @@ use BookStoreAPI\BookStore\Domain\Models\AuthorRepository;
 use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
 use BookStoreAPI\SharedKernel\Infrastructure\Service\ValidationService;
 
-class CreateAuthorCommandHandler
+readonly class CreateAuthorCommandHandler
 {
     public function __construct(
-        private readonly AuthorRepository $authorRepository,
-        private readonly ValidationService $validationService,
+        private AuthorRepository $authorRepository,
+        private ValidationService $validationService,
     ) {
     }
 
