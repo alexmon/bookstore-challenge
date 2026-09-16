@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Integration\BookStore\Application\Commands\CreateBook;
+
+use App\Models\Author;
+use BookStoreAPI\BookStore\Application\Commands\CreateBook\CreateBookCommand;
+use BookStoreAPI\BookStore\Application\Commands\CreateBook\CreateBookCommandHandler;
+use BookStoreAPI\BookStore\Domain\Models\BookEntity;
+use Faker\Factory;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Override;
+use Tests\TestCase;
+
+class CreateBookCommandHandlerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private CreateBookCommandHandler $commandHandler;
+
+    #[Override]
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->commandHandler = $this->app->make(CreateBookCommandHandler::class);
+    }
+
+    // @testdox Create a book happy path
+    public function testCreateBookHappyPath(): void
+    {
+        $author = Author::factory()->create();
+        $faker = Factory::create();
+        $command = new CreateBookCommand(
+            $faker->words(3, true),
+            $faker->isbn13(),
+            $author->uuid,
+        );
+
+        $this->commandHandler->handle($command);
+
+        /** @var BookEntity $book */
+        $book = $command->getResult()['book'];
+
+        $this->assertDatabaseHas('books', [
+            'uuid' => $book->getId()->getValue(),
+        ]);
+    }
+}

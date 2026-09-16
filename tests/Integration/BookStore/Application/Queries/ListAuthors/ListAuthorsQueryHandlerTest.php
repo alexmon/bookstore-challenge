@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Integration\Bookstore\Queries\ListAuthors;
+namespace Tests\Integration\BookStore\Queries\ListAuthors;
 
 use App\Models\Author;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQuery;
