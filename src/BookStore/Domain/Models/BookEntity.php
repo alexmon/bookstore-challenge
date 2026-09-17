@@ -14,7 +14,7 @@ use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 /**
  * Book root aggregate
  */
-class BookEntity
+class BookEntity implements \JsonSerializable
 {
     private ?\DateTimeImmutable $createdAt;
     private ?\DateTimeImmutable $updatedAt;
@@ -107,5 +107,25 @@ class BookEntity
         }
 
         $this->borrower = null;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id->getValue(),
+            'title' => $this->title,
+            'isbn' => $this->isbn->getValue(),
+            'author' => $this->author ? [
+                'id' => $this->author->getId()->getValue(),
+                'name' => $this->author->getName(),
+            ] : null,
+            'is_active' => $this->isActive,
+            'borrower' => $this->borrower ? [
+                'id' => $this->borrower->getId()->getValue(),
+                'name' => $this->borrower->getName(),
+            ] : null,
+            'created_at' => $this->createdAt?->format(DATE_ATOM),
+            'updated_at' => $this->updatedAt?->format(DATE_ATOM),
+        ];
     }
 }

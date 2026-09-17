@@ -22,13 +22,41 @@ use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 class EloquentAdapterBookRepository implements BookRepository
 {
     /**
-     * @inheritDoc
+     * TODO fix contract return type
+     * @return array|array{"current_page": int, "has_more_pages": bool, items: array, "last_page": int, "per_page": int, total: int, "total_pages": int|array{"current_page": int, "has_more_pages": bool, items: BookEntity[], "last_page": int, "per_page": int, total: int, "total_pages": int}}
      */
-    public function findAll(): array
-    {
-        $books = Book::with(['author', 'borrower'])->all();
+    public function search(
+        int $page,
+        int $perPage,
+        ?string $search,
+        ?string $authorUuid = null,
+        ?bool $available = null,
+    ): array {
+        $query = Book::with(['author', 'borrower']);
+
+        if ($search !== null) {
+            $query->where('title', 'LIKE', "%{$search}%");
+        }
+
+        if ($authorUuid !== null) {
+            $author = Author::where('uuid', $authorUuid)->first();
+            if ($author) {
+                $query->where('author_id', $author->id);
+            } else {
+                return [];
+            }
+        }
+
+        if ($available !== null) {
+            $available
+                ? $query->whereNull('borrower_id')
+                : $query->whereNotNull('borrower_id');
+        }
+
+        $books = $query->paginate($perPage, ['*'], 'page', $page);
+
         $bookEntities = [];
-        foreach ($books as $book) {
+        foreach ($books->items() as $book) {
             $authorEntity = $book->author
                 ? new AuthorEntity(
                     new AuthorId($book->author->uuid),
@@ -41,13 +69,22 @@ class EloquentAdapterBookRepository implements BookRepository
                 $book->title,
                 new Isbn($book->isbn),
                 $authorEntity,
-                $book->is_active,
+                (bool) $book->is_active,
                 $book->borrower ? new BorrowerEntity(new BorrowerId($book->borrower->uuid), $book->borrower->name) : null,
                 \DateTimeImmutable::createFromInterface($book->created_at),
                 \DateTimeImmutable::createFromInterface($book->updated_at),
             );
         }
-        return $bookEntities;
+
+        return [
+            'current_page' => $books->currentPage(),
+            'per_page' => $books->perPage(),
+            'total' => $books->total(),
+            'last_page' => $books->lastPage(),
+            'has_more_pages' => $books->hasMorePages(),
+            'items' => $bookEntities,
+            'total_pages' => $books->lastPage(),
+        ];
     }
 
     public function findById(BookId $id, bool $lock = false): ?BookEntity

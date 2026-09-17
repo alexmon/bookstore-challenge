@@ -14,6 +14,7 @@ use BookStoreAPI\BookStore\Application\Commands\FetchAndLockBook\FetchAndLockBoo
 use BookStoreAPI\BookStore\Application\Commands\ReturnBook\ReturnBookCommand;
 use BookStoreAPI\BookStore\Application\Queries\FetchAuthor\FetchAuthorQuery;
 use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQuery;
+use BookStoreAPI\BookStore\Application\Queries\SearchBooks\SearchBooksQuery;
 use BookStoreAPI\BookStore\Domain\Exceptions\AuthorNotFoundException;
 use BookStoreAPI\BookStore\Domain\Exceptions\BookAlreadyExists;
 use BookStoreAPI\BookStore\Domain\Exceptions\BorrowException;
@@ -117,31 +118,48 @@ class BookController extends Controller
     }
 
     /**
-     * TODO: add caching and pagination
+     * Responses:
+     * - 200 OK
+     *
+     * Support search books by title and author UUID and availability.
+     *
+     * Assumption:  using limit / offset query - usage on a authorized request with paginator
+     * could also be used a cursor search
+     *
+     * TODO: make page size configurable
      */
     public function index(Request $request): JsonResponse
     {
-        // NOTE: eager loading we are OK
-        $query = Book::with('author');
+        $search = $request->query('search', null);
+        $authorUuid = $request->query('author', null);
+        $available = boolval($request->query('available', null));
+        // TODO add better sanitization parsing for page and perPage values
+        $page = intval($request->query('page', '1'));
+        $perPage = intval($request->query('per_page', '10'));
 
-        if ($request->has('search')) {
-            $search = $request->query('search');
-            $query->where('title', 'like', '%' . $search . '%');
-        }
+        Log::info('[Search books] Request', ['search' => $search, 'authorUuid' => $authorUuid, 'available' => $available, 'page' => $page, 'perPage' => $perPage]);
 
-        if ($request->has('author')) {
-            $authorUuid = $request->query('author');
-            $author = Author::where('uuid', $authorUuid)->first();
-            if ($author) {
-                $query->where('author_id', $author->id);
-            } else {
-                return response()->json(['data' => []], 200);
-            }
-        }
+        $booksResults = $this->queryBus->handle(new SearchBooksQuery(
+            search: $search,
+            page: $page,
+            perPage: $perPage,
+            authorUuid: $authorUuid,
+            available: $available,
+        ));
 
-        $books = $query->get();
-
-        return response()->json(['data' => $books], 200);
+        return response()->json([
+            'current_page' => $booksResults['current_page'],
+            'per_page' => $booksResults['per_page'],
+            'total' => $booksResults['total'],
+            'last_page' => $booksResults['last_page'],
+            'has_more_pages' => $booksResults['has_more_pages'],
+            // if item is array it is already in the desired format retrived from cache
+            'items' => \array_map(
+                fn($book) => \is_array($book) ? $book : (new FetchBookViewModel($book))->render(),
+                $booksResults['items']
+            ),
+            'total_pages' => $booksResults['total_pages'],
+        ], 200);
     }
 
     /**

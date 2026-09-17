@@ -24,6 +24,8 @@ use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQuery;
 use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQueryHandler;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQuery;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQueryHandler;
+use BookStoreAPI\BookStore\Application\Queries\SearchBooks\SearchBooksQuery;
+use BookStoreAPI\BookStore\Application\Queries\SearchBooks\SearchBooksQueryHandler;
 use BookStoreAPI\BookStore\Domain\Models\AuthorRepository;
 use BookStoreAPI\BookStore\Domain\Models\BookRepository;
 use BookStoreAPI\BookStore\Domain\Models\BorrowerRepository;
@@ -99,6 +101,7 @@ class AppServiceProvider extends ServiceProvider
                                 ListAuthorsQuery::class => ListAuthorsQueryHandler::class,
                                 FetchBookQuery::class => FetchBookQueryHandler::class,
                                 FetchAuthorQuery::class => FetchAuthorQueryHandler::class,
+                                SearchBooksQuery::class => SearchBooksQueryHandler::class,
                             ]
                         ),
                         new HandleInflector()

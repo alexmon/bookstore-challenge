@@ -9,10 +9,13 @@ use BookStoreAPI\BookStore\Domain\Models\BookId;
 
 interface BookRepository
 {
-    /**
-     * @return BookEntity[]
-     */
-    public function findAll(): array;
+    public function search(
+        int $page,
+        int $perPage,
+        ?string $search,
+        ?string $authorUuid = null,
+        ?bool $available = null,
+    ): array;
 
     public function findById(BookId $id, bool $lock = false): ?BookEntity;
 
