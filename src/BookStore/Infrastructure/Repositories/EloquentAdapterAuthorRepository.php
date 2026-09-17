@@ -9,7 +9,7 @@ use BookStoreAPI\BookStore\Domain\Models\AuthorEntity;
 use BookStoreAPI\BookStore\Domain\Models\AuthorId;
 use BookStoreAPI\BookStore\Domain\Models\AuthorRepository;
 
-class WrappedEloquentAuthorRepository implements AuthorRepository
+class EloquentAdapterAuthorRepository implements AuthorRepository
 {
     /**
      * @inheritdoc

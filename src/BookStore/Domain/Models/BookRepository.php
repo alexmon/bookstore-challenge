@@ -14,7 +14,7 @@ interface BookRepository
      */
     public function findAll(): array;
 
-    public function findById(BookId $id): ?BookEntity;
+    public function findById(BookId $id, bool $lock = false): ?BookEntity;
 
     public function save(BookEntity $book): void;
 }

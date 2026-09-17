@@ -37,14 +37,14 @@ readonly class CreateBookCommandHandler
         );
 
         if (null === $author) {
-            throw new AuthorNotFoundException;
+            throw AuthorNotFoundException::create();
         }
 
         $book = new BookEntity(
             BookId::generate(),
             $command->title,
             new Isbn($command->isbn),
-            $author->getId(),
+            $author,
         );
 
         $this->bookRepository->save($book);

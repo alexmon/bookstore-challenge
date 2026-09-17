@@ -15,7 +15,7 @@ class AuthorId implements \Stringable
     public function __construct(private string $id)
     {
         if (!Uuid::isValid($id)) {
-            throw new InvalidAuthorIdException;
+            throw InvalidAuthorIdException::create();
         }
     }
 

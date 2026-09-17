@@ -64,9 +64,6 @@ erDiagram
 
 Introduce a cache layer in order to
 
-- store a idempotency key with a specified TTL. 
-  The idempotency key will be created by a combination of the information
-  `book_uuid` param + `idempotency_key` + hash(`borrower_name`)
 - cache heavy queries i.e.e BookController search book action (nice to have!)
 
 ### Borrow book transaction
@@ -75,7 +72,6 @@ The business transaction will perform the actions below:
 
 - begins a DB transaction
 - Perform a select for update on `books` table related record searched by `uuid`
-- If cache hit with provided idempotency key then abort and rollback
 - Insert new `borrower` record
 - update related `book` record's column `borrower_id`
 - insert record on `loans` table with action = `borrowed`

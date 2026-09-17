@@ -6,19 +6,19 @@ namespace BookStoreAPI\BookStore\Domain\Models;
 
 use BookStoreAPI\BookStore\Domain\Models\AuthorId;
 
-/**
- * Author root aggregate
- */
 class AuthorEntity
 {
+    private ?\DateTimeImmutable $createdAt;
+    private ?\DateTimeImmutable $updatedAt;
+
     public function __construct(
         private AuthorId $id,
         private string $name,
-        private ?\DateTimeImmutable $createdAt = null,
-        private ?\DateTimeImmutable $updatedAt = null,
+        ?\DateTimeImmutable $createdAt = null,
+        ?\DateTimeImmutable $updatedAt = null,
     ) {
-        $this->createdAt = $this->createdAt ?? new \DateTimeImmutable();
-        $this->updatedAt = $this->updatedAt ?? new \DateTimeImmutable();
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
     }
 
     public function getId(): AuthorId

@@ -11,6 +11,8 @@
         "laravel/tinker": "^2.10.1",
         "league/tactician": "^1.2",
         "league/tactician-container": "^3.0",
+        "predis/predis": "^3.6",
+        "psr/simple-cache": "^3.0",
         "symfony/validator": "^8.1"
     },
     "require-dev": {

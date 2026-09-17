@@ -12,6 +12,7 @@ use BookStoreAPI\BookStore\Infrastructure\Http\ViewModels\ListAuthorsViewModel;
 use BookStoreAPI\SharedKernel\Domain\Bus\CommandBus\CommandBus;
 use BookStoreAPI\SharedKernel\Domain\Bus\QueryBus\QueryBus;
 use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
+use BookStoreApi\SharedKernel\Infrastructure\Service\ExceptionHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -35,9 +36,7 @@ class AuthorController extends Controller
         try {
             $this->commandBus->handle($command);
         } catch (ValidationException $e) {
-            Log::error('Create author validation error', [
-                'exception' => $e,
-            ]);
+            Log::error('[Create author] Validation error', ['exception' => ExceptionHelper::getFileLineAsString($e), 'errors' => $e->getErrors()]);
 
             throw $e;
         }

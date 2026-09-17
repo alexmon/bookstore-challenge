@@ -12,7 +12,7 @@ class BookId implements \Stringable
     public function __construct(private string $id)
     {
         if (!Uuid::isValid($id)) {
-            throw new InvalidBookIdException;
+            throw InvalidBookIdException::create();
         }
     }
 

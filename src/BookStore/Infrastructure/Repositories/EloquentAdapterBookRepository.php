@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+namespace BookStoreAPI\BookStore\Infrastructure\Repositories;
+
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\Borrower;
+use BookStoreAPI\BookStore\Domain\Exceptions\AuthorNotFoundException;
+use BookStoreAPI\BookStore\Domain\Exceptions\BookAlreadyExists;
+use BookStoreAPI\BookStore\Domain\Exceptions\BorrowerNotFoundException;
+use BookStoreAPI\BookStore\Domain\Models\AuthorEntity;
+use BookStoreAPI\BookStore\Domain\Models\AuthorId;
+use BookStoreAPI\BookStore\Domain\Models\BookEntity;
+use BookStoreAPI\BookStore\Domain\Models\BookId;
+use BookStoreAPI\BookStore\Domain\Models\BookRepository;
+use BookStoreAPI\BookStore\Domain\Models\BorrowerEntity;
+use BookStoreAPI\BookStore\Domain\Models\BorrowerId;
+use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
+
+class EloquentAdapterBookRepository implements BookRepository
+{
+    /**
+     * @inheritDoc
+     */
+    public function findAll(): array
+    {
+        $books = Book::with(['author', 'borrower'])->all();
+        $bookEntities = [];
+        foreach ($books as $book) {
+            $authorEntity = $book->author
+                ? new AuthorEntity(
+                    new AuthorId($book->author->uuid),
+                    $book->author->name
+                )
+                : null;
+
+            $bookEntities[] = new BookEntity(
+                new BookId($book->uuid),
+                $book->title,
+                new Isbn($book->isbn),
+                $authorEntity,
+                $book->is_active,
+                $book->borrower ? new BorrowerEntity(new BorrowerId($book->borrower->uuid), $book->borrower->name) : null,
+                \DateTimeImmutable::createFromInterface($book->created_at),
+                \DateTimeImmutable::createFromInterface($book->updated_at),
+            );
+        }
+        return $bookEntities;
+    }
+
+    public function findById(BookId $id, bool $lock = false): ?BookEntity
+    {
+        $query = Book::with(['author', 'borrower'])->where('uuid', $id->getValue());
+        if (true === $lock) {
+            $query->lockForUpdate();
+        }
+        $book = $query->first();
+        if ($book === null) {
+            return null;
+        }
+
+        $authorEntity = $book->author
+            ? new AuthorEntity(
+                new AuthorId($book->author->uuid),
+                $book->author->name
+            )
+            : null;
+
+        return new BookEntity(
+            new BookId($book->uuid),
+            $book->title,
+            new Isbn($book->isbn),
+            $authorEntity,
+            (bool) $book->is_active,
+            $book->borrower ? new BorrowerEntity(new BorrowerId($book->borrower->uuid), $book->borrower->name) : null,
+            \DateTimeImmutable::createFromInterface($book->created_at),
+            \DateTimeImmutable::createFromInterface($book->updated_at),
+        );
+    }
+
+    public function save(BookEntity $book): void
+    {
+        $eloquentBook = Book::where('uuid', $book->getId()->getValue())->first() ?? new Book();
+
+        if ($book->getAuthor() !== null) {
+           $eloquentAuthor = Author::where('uuid', $book->getAuthor()->getId()->getValue())->first();
+           if ($eloquentAuthor === null) {
+               throw AuthorNotFoundException::create();
+           }
+           $eloquentBook->author_id = $eloquentAuthor->id;
+        }
+
+        if ($book->getBorrower() !== null) {
+            $eloquentBorrower = Borrower::where('uuid', $book->getBorrower()->getId()->getValue())->first();
+            if ($eloquentBorrower === null) {
+                throw BorrowerNotFoundException::create();
+            }
+            $eloquentBook->borrower_id = $eloquentBorrower->id;
+        } else {
+            $eloquentBook->borrower_id = null;
+        }
+
+        $eloquentBook->uuid = $book->getId()->getValue();
+        $eloquentBook->title = $book->getTitle();
+        $eloquentBook->isbn = $book->getIsbn()->getValue();
+        $eloquentBook->is_active = $book->isActive();
+        $eloquentBook->created_at = $book->getCreatedAt();
+        $eloquentBook->updated_at = $book->getUpdatedAt();
+
+        try {
+            $eloquentBook->save();
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '23000') { // Integrity constraint violation
+                throw BookAlreadyExists::create();
+            } else {
+                throw $e;
+            }
+        }
+    }
+}
