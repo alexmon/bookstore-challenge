@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Author;
-use App\Models\Book;
 use BookStoreAPI\BookStore\Application\Commands\BorrowBook\BorrowBookCommand;
 use BookStoreAPI\BookStore\Application\Commands\CreateBook\CreateBookCommand;
 use BookStoreAPI\BookStore\Application\Commands\CreateBorrower\FindOrCreateBorrowerCommand;
 use BookStoreAPI\BookStore\Application\Commands\CreateLoanEntry\CreateLoanEntryCommand;
 use BookStoreAPI\BookStore\Application\Commands\FetchAndLockBook\FetchAndLockBookCommand;
 use BookStoreAPI\BookStore\Application\Commands\ReturnBook\ReturnBookCommand;
-use BookStoreAPI\BookStore\Application\Queries\FetchAuthor\FetchAuthorQuery;
 use BookStoreAPI\BookStore\Application\Queries\FetchBook\FetchBookQuery;
 use BookStoreAPI\BookStore\Application\Queries\SearchBooks\SearchBooksQuery;
 use BookStoreAPI\BookStore\Domain\Exceptions\AuthorNotFoundException;

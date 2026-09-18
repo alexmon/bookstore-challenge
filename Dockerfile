@@ -6,6 +6,16 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql zip \
     && a2enmod rewrite
 
+# --- Xdebug ---
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+RUN { \
+    echo 'xdebug.mode=coverage'; \
+    echo 'xdebug.start_with_request=no'; \
+    } > /usr/local/etc/php/conf.d/xdebug-custom.ini
+# ---------------
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public

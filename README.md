@@ -25,6 +25,13 @@ A simple REST API for managing a bookstore — authors, books, and loans.
 docker exec -it bookstore_test ./vendor/bin/phpunit --testdox
 ```
 
+with coverage:
+
+```bash
+./vendor/bin/phpunit --testdox --coverage-html coverage
+```
+
+
 ---
 
 ## API Documentation
