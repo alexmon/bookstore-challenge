@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace BookStoreAPI\BookStore\Application\Queries\SearchBooks;
 
+use BookStoreAPI\BookStore\Domain\Cache\BookSearchResultsCacheService;
 use BookStoreAPI\BookStore\Domain\Models\BookRepository;
 use BookStoreAPI\SharedKernel\Infrastructure\Service\ValidationService;
-use Psr\SimpleCache\CacheInterface;
 
 class SearchBooksQueryHandler
 {
     public function __construct(
         private readonly BookRepository $bookRepository,
         private readonly ValidationService $validationService,
-        private readonly CacheInterface $cache,
+        private readonly BookSearchResultsCacheService $bookSearchResultsCacheService,
     ) {
     }
 
@@ -21,18 +21,10 @@ class SearchBooksQueryHandler
     {
         $this->validationService->validate($query);
 
-        // Redis long keys performance issue (consider hashing the key)
-        $cacheKey = \md5(\sprintf(
-            'search_books_%s_%s_%s_%s_%s',
-            $query->search ?? '',
-            $query->page,
-            $query->perPage,
-            $query->authorUuid ?? '',
-            $query->available ?? ''
-        ));
+        $cacheKey = $this->generateCacheKey($query);
 
-        if ($this->cache->has($cacheKey)) {
-            return \json_decode($this->cache->get($cacheKey), true);
+        if ($this->bookSearchResultsCacheService->has($cacheKey)) {
+            return $this->bookSearchResultsCacheService->get($cacheKey);
         }
 
         $booksResults = $this->bookRepository->search(
@@ -43,9 +35,21 @@ class SearchBooksQueryHandler
             available: $query->available,
         );
 
-        // TODO make cache duration configurable
-        $this->cache->set($cacheKey, \json_encode($booksResults), 300); // Cache for 5 mins
+        $this->bookSearchResultsCacheService->set($cacheKey, $booksResults);
 
         return $booksResults;
+    }
+
+    private function generateCacheKey(SearchBooksQuery $query): string
+    {
+        // Redis long keys performance issue (consider hashing the key)
+        return \md5(\sprintf(
+            'search_books_%s_%s_%s_%s_%s',
+            $query->search ?? '',
+            $query->page,
+            $query->perPage,
+            $query->authorUuid ?? '',
+            $query->available ?? ''
+        ));
     }
 }

@@ -26,10 +26,12 @@ use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQuery;
 use BookStoreAPI\BookStore\Application\Queries\ListAuthors\ListAuthorsQueryHandler;
 use BookStoreAPI\BookStore\Application\Queries\SearchBooks\SearchBooksQuery;
 use BookStoreAPI\BookStore\Application\Queries\SearchBooks\SearchBooksQueryHandler;
+use BookStoreAPI\BookStore\Domain\Cache\BookSearchResultsCacheService;
 use BookStoreAPI\BookStore\Domain\Models\AuthorRepository;
 use BookStoreAPI\BookStore\Domain\Models\BookRepository;
 use BookStoreAPI\BookStore\Domain\Models\BorrowerRepository;
 use BookStoreAPI\BookStore\Domain\Models\LoanRepository;
+use BookStoreAPI\BookStore\Infrastructure\Cache\ConcreteBookSearchResultsCacheService;
 use BookStoreAPI\BookStore\Infrastructure\Repositories\EloquentAdapterAuthorRepository;
 use BookStoreAPI\BookStore\Infrastructure\Repositories\EloquentAdapterBookRepository;
 use BookStoreAPI\BookStore\Infrastructure\Repositories\EloquentAdapterBorrowerRepository;
@@ -153,6 +155,11 @@ class AppServiceProvider extends ServiceProvider
         // CacheInterface
         $this->app->singleton(CacheInterface::class, function ($app) {
             return new LaravelRedisAdapter();
+        });
+
+        // BookSearchResultsCacheService
+        $this->app->singleton(BookSearchResultsCacheService::class, function ($app) {
+            return new ConcreteBookSearchResultsCacheService($app->make(CacheInterface::class));
         });
     }
 

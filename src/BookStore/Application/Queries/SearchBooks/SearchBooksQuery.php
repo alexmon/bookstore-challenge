@@ -13,6 +13,8 @@ readonly class SearchBooksQuery implements Query
         #[Assert\NotBlank(allowNull: true)]
         #[Assert\Length(min: 1, max: 255)]
         public ?string $search = null,
+        #[Assert\NotBlank(allowNull: true)]
+        #[Assert\Uuid]
         public ?string $authorUuid = null,
         public ?bool $available = null,
         #[Assert\Range(min: 1)]

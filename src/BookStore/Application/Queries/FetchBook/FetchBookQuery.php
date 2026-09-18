@@ -11,7 +11,7 @@ class FetchBookQuery implements Query
 {
     public function __construct(
         #[Assert\NotBlank]
-        #[Assert\Length(min: 36, max: 36)]
+        #[Assert\Uuid]
         #[Assert\NotNull]
         public readonly string $uuid,
     ) {}

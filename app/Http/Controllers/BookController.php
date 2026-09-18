@@ -121,21 +121,21 @@ class BookController extends Controller
      * Responses:
      * - 200 OK
      *
-     * Support search books by title and author UUID and availability.
+     * Support search books by title, author UUID and availability.
      *
      * Assumption:  using limit / offset query - usage on a authorized request with paginator
      * could also be used a cursor search
-     *
-     * TODO: make page size configurable
      */
     public function index(Request $request): JsonResponse
     {
+        /** @var ?string $search */
         $search = $request->query('search', null);
+        /** @var ?string $authorUuid */
         $authorUuid = $request->query('author', null);
+        // available filter takes values [null, 0, 1]
         $available = boolval($request->query('available', null));
-        // TODO add better sanitization parsing for page and perPage values
         $page = intval($request->query('page', '1'));
-        $perPage = intval($request->query('per_page', '10'));
+        $perPage = intval($request->query('per_page', env('LISTING_PER_PAGE', '10')));
 
         Log::info('[Search books] Request', ['search' => $search, 'authorUuid' => $authorUuid, 'available' => $available, 'page' => $page, 'perPage' => $perPage]);
 

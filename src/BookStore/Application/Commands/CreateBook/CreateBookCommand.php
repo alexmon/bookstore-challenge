@@ -21,7 +21,7 @@ class CreateBookCommand extends Command
         public readonly ?string $isbn,
 
         #[Assert\NotBlank]
-        #[Assert\Length(min: 36, max: 36)]
+        #[Assert\Uuid]
         #[Assert\NotNull]
         public readonly ?string $authorUuid
     ) {}
