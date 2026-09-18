@@ -26,7 +26,7 @@ class CreateBookCommandHandlerTest extends TestCase
         $this->commandHandler = $this->app->make(CreateBookCommandHandler::class);
     }
 
-    // @testdox Create a book happy path
+    #[TestDox("Create a book happy path")]
     public function testCreateBookHappyPath(): void
     {
         $author = Author::factory()->create();

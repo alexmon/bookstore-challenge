@@ -76,9 +76,12 @@ class BookEntity implements \JsonSerializable
         return $this->borrower;
     }
 
+    /**
+     * Checks if the book is available for borrowing. A book is considered available if it is not currently borrowed by any borrower
+     */
     public function isAvailable(): bool
     {
-        return $this->borrower === null;
+        return $this->isActive && $this->borrower === null;
     }
 
     /**

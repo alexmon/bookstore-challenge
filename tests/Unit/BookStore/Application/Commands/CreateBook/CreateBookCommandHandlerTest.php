@@ -12,6 +12,7 @@ use BookStoreAPI\BookStore\Domain\Models\BookRepository;
 use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
 use BookStoreAPI\SharedKernel\Infrastructure\Service\ValidationService;
 use Faker\Factory;
+use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ramsey\Uuid\Uuid;
 use Tests\Fixtures\AuthorEntityFixture;
@@ -40,18 +41,18 @@ class CreateBookCommandHandlerTest extends TestCase
         );
     }
 
-    // @testdox ValidationException is not shallowed
+    #[TestDox('ValidationException is not shallowed')]
     public function testValidationExceptionIsNotShallowed(): void
     {
-        $this->validationService->method('validate')->willThrowException(new ValidationException());
+        $command = $this->createMock(CreateBookCommand::class);
 
+        $this->validationService->expects($this->once())->method('validate')->willThrowException(new ValidationException());
         $this->expectException(ValidationException::class);
 
-        $command = $this->createMock(CreateBookCommand::class);
         $this->commandHandler->handle($command);
     }
 
-    // @testdox if $author is not null throw AuthorNotFoundException
+    #[TestDox('if $author is  null throw AuthorNotFoundException')]
     public function testAuthorNotFoundExceptionIsThrown(): void
     {
         $this->authorRepository->method('findById')->willReturn(null);
@@ -67,7 +68,7 @@ class CreateBookCommandHandlerTest extends TestCase
         $this->commandHandler->handle($command);
     }
 
-    // @testdox mocked methods save, findbyId are called and the $command setResult method is invoked with correct parameters
+    #[TestDox('mocked methods save, findbyId are called and the $command setResult method is invoked with correct parameters')]
     public function testSaveAndFindByIdMethodsAreCalledAndSetResultIsInvoked(): void
     {
         $author = AuthorEntityFixture::create();
