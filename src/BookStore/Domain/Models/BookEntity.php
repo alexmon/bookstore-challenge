@@ -16,22 +16,17 @@ use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
  */
 class BookEntity implements \JsonSerializable
 {
-    private ?\DateTimeImmutable $createdAt;
-    private ?\DateTimeImmutable $updatedAt;
+    private ?AuthorEntity $author = null;
+    private ?BorrowerEntity $borrower = null;
+    private ?\DateTimeImmutable $createdAt = null;
+    private ?\DateTimeImmutable $updatedAt = null;
 
     public function __construct(
         private BookId $id,
         private string $title,
         private Isbn $isbn,
-        private ?AuthorEntity $author = null,
-        private bool $isActive = true,
-        private ?BorrowerEntity $borrower = null,
-        ?\DateTimeImmutable $createdAt = null,
-        ?\DateTimeImmutable $updatedAt = null,
-    ) {
-        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
-        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
-    }
+        private bool $isActive,
+    ) {}
 
     public function getId(): BookId
     {
@@ -42,18 +37,21 @@ class BookEntity implements \JsonSerializable
     {
         return $this->title;
     }
+
     public function getIsbn(): Isbn
     {
         return $this->isbn;
     }
+
     public function getAuthor(): ?AuthorEntity
     {
         return $this->author;
     }
 
-    public function setAuthor(AuthorEntity $author): void
+    public function setAuthor(?AuthorEntity $author): self
     {
         $this->author = $author;
+        return $this;
     }
 
     public function isActive(): bool
@@ -66,14 +64,32 @@ class BookEntity implements \JsonSerializable
         return $this->createdAt;
     }
 
+    public function setCreatedAt(?\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
+
     public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
     }
 
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
     public function getBorrower(): ?BorrowerEntity
     {
         return $this->borrower;
+    }
+
+    public function setBorrower(?BorrowerEntity $borrower): self
+    {
+        $this->borrower = $borrower;
+        return $this;
     }
 
     /**
@@ -98,6 +114,8 @@ class BookEntity implements \JsonSerializable
         }
 
         $this->borrower = $borrower;
+
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     /**
@@ -110,6 +128,8 @@ class BookEntity implements \JsonSerializable
         }
 
         $this->borrower = null;
+
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function jsonSerialize(): array

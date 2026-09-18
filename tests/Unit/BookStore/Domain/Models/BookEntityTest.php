@@ -9,6 +9,7 @@ use BookStoreAPI\BookStore\Domain\Exceptions\ErrorCode;
 use BookStoreAPI\BookStore\Domain\Models\BookEntity;
 use BookStoreAPI\BookStore\Domain\Models\BookId;
 use BookStoreAPI\BookStore\Domain\Models\BorrowerEntity;
+use BookStoreAPI\BookStore\Domain\Services\BookEntityBuilder;
 use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 use Faker\Factory;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,15 +22,20 @@ class BookEntityTest extends TestCase
 {
     public function testBookEntityCreation(): void
     {
-        $bookId = new BookId('123e4567-e89b-12d3-a456-426614174000');
-        $isbn = new Isbn('978-3-16-148410-0');
+        $bookId = BookId::from('123e4567-e89b-12d3-a456-426614174000');
+        $isbn = Isbn::from('978-3-16-148410-0');
         $title = 'Sample Book';
 
-        $bookEntity = new BookEntity(
+        $bookEntityBuilder = new BookEntityBuilder(
             $bookId,
             $title,
             $isbn,
+            true
         );
+        $bookEntityBuilder
+            ->setCreatedAtNow()
+            ->setUpdatedAtNow();
+        $bookEntity = $bookEntityBuilder->build();
 
         $this->assertSame($bookId, $bookEntity->getId());
         $this->assertSame($title, $bookEntity->getTitle());
@@ -43,17 +49,20 @@ class BookEntityTest extends TestCase
     #[TestDox('borrow method throws exception when book is inactive')]
     public function testBorrowThrowsExceptionWhenBookIsInactive(): void
     {
-        $bookId = new BookId('123e4567-e89b-12d3-a456-426614174000');
-        $isbn = new Isbn('978-3-16-148410-0');
+        $bookId = BookId::from('123e4567-e89b-12d3-a456-426614174000');
+        $isbn = Isbn::from('978-3-16-148410-0');
         $title = 'Sample Book';
 
-        $bookEntity = new BookEntity(
+        $bookEntityBuilder = new BookEntityBuilder(
             $bookId,
             $title,
             $isbn,
-            null,
-            false, // inactive book
+            false
         );
+        $bookEntityBuilder
+            ->setCreatedAtNow()
+            ->setUpdatedAtNow();
+        $bookEntity = $bookEntityBuilder->build();
 
         $this->expectException(BorrowException::class);
         $this->expectExceptionCode(ErrorCode::BOOK_BORROW_REQUEST_ON_INACTIVE->value);
@@ -64,21 +73,22 @@ class BookEntityTest extends TestCase
     #[TestDox('borrow method throws BorrowException when book is already borrowed')]
     public function testBorrowThrowsExceptionWhenBookIsAlreadyBorrowed(): void
     {
-        $bookId = new BookId('123e4567-e89b-12d3-a456-426614174000');
-        $isbn = new Isbn('978-3-16-148410-0');
+        $bookId = BookId::from('123e4567-e89b-12d3-a456-426614174000');
+        $isbn = Isbn::from('978-3-16-148410-0');
         $title = 'Sample Book';
 
         $borrower = BorrowerEntityFixture::create();
-        $bookEntity = new BookEntity(
+        $bookEntityBuilder = new BookEntityBuilder(
             $bookId,
             $title,
             $isbn,
-            null,
-            true, // active book
-            $borrower, // already borrowed by this borrower
-            \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', date('Y-m-d H:i:s')),
-            \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', date('Y-m-d H:i:s')),
+            true
         );
+        $bookEntityBuilder
+            ->setBorrower($borrower)
+            ->setCreatedAtNow()
+            ->setUpdatedAtNow();
+        $bookEntity = $bookEntityBuilder->build();
 
         $newBorrower = BorrowerEntityFixture::create();
 
@@ -93,19 +103,23 @@ class BookEntityTest extends TestCase
     public function testIsAvailable(bool $isActive, ?BorrowerEntity $borrower, bool $expected): void
     {
         $faker = Factory::create();
-        $bookId = new BookId($faker->uuid);
-        $isbn = new Isbn($faker->isbn13());
+        $bookId = BookId::from($faker->uuid);
+        $isbn = Isbn::from($faker->isbn13());
         $title = $faker->name;
         $author = AuthorEntityFixture::create();
 
-        $bookEntity = new BookEntity(
+        $bookEntityBuilder = new BookEntityBuilder(
             $bookId,
             $title,
             $isbn,
-            $author,
-            $isActive,
-            $borrower
+            $isActive
         );
+        $bookEntityBuilder
+            ->setAuthor($author)
+            ->setBorrower($borrower)
+            ->setCreatedAtNow()
+            ->setUpdatedAtNow();
+        $bookEntity = $bookEntityBuilder->build();
 
         $this->assertSame($expected, $bookEntity->isAvailable());
     }
@@ -123,19 +137,23 @@ class BookEntityTest extends TestCase
     public function testJsonSerializable(): void
     {
         $faker = Factory::create();
-        $bookId = new BookId($faker->uuid);
-        $isbn = new Isbn($faker->isbn13());
+        $bookId = BookId::from($faker->uuid);
+        $isbn = Isbn::from($faker->isbn13());
         $title = $faker->name;
         $author = AuthorEntityFixture::create();
         $borrower = BorrowerEntityFixture::create();
-        $bookEntity = new BookEntity(
+        $bookEntityBuilder = new BookEntityBuilder(
             $bookId,
             $title,
             $isbn,
-            $author,
-            true,
-            $borrower
+            true
         );
+        $bookEntityBuilder
+            ->setAuthor($author)
+            ->setBorrower($borrower)
+            ->setCreatedAtNow()
+            ->setUpdatedAtNow();
+        $bookEntity = $bookEntityBuilder->build();
 
         $json = json_encode($bookEntity);
 

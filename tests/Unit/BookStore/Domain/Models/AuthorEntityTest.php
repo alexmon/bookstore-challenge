@@ -12,7 +12,7 @@ class AuthorEntityTest extends TestCase
 {
     public function testAuthorEntityCreation(): void
     {
-        $authorId = new AuthorId('123e4567-e89b-12d3-a456-426614174000');
+        $authorId = AuthorId::from('123e4567-e89b-12d3-a456-426614174000');
         $name = 'John Doe';
 
         $authorEntity = new AuthorEntity(

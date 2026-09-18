@@ -12,7 +12,7 @@ class BorrowerEntityTest extends TestCase
 {
     public function testBorrowerEntityCreation(): void
     {
-        $borrowerId = new BorrowerId('123e4567-e89b-12d3-a456-426614174000');
+        $borrowerId = BorrowerId::from('123e4567-e89b-12d3-a456-426614174000');
         $name = 'John Doe';
 
         $borrowerEntity = new BorrowerEntity(

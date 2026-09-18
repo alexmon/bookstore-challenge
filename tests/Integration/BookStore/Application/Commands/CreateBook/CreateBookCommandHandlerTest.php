@@ -11,6 +11,7 @@ use BookStoreAPI\BookStore\Domain\Models\BookEntity;
 use Faker\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Override;
+use PHPUnit\Framework\Attributes\TestDox;
 use Tests\TestCase;
 
 class CreateBookCommandHandlerTest extends TestCase

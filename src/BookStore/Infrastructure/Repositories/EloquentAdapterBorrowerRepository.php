@@ -21,7 +21,7 @@ class EloquentAdapterBorrowerRepository implements BorrowerRepository
         }
 
         return new BorrowerEntity(
-            new BorrowerId($borrower->uuid),
+            BorrowerId::from($borrower->uuid),
             $borrower->name,
         );
     }
@@ -35,7 +35,7 @@ class EloquentAdapterBorrowerRepository implements BorrowerRepository
         }
 
         return new BorrowerEntity(
-            new BorrowerId($borrower->uuid),
+            BorrowerId::from($borrower->uuid),
             $borrower->name,
         );
     }

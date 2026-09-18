@@ -12,11 +12,16 @@ use BookStoreAPI\SharedKernel\Domain\Exceptions\InvalidISBNException;
 class Isbn implements \Stringable
 {
 
-    public function __construct(private string $value)
+    protected function __construct(private string $value)
     {
         if (!preg_match('/^(?=(?:\D*\d){10}(?:(?:\D*\d){3})?$)[\d-]+$/', $value)) {
             throw new InvalidISBNException();
         }
+    }
+
+    public static function from(string $value): self
+    {
+        return new self($value);
     }
 
     public function getValue(): string

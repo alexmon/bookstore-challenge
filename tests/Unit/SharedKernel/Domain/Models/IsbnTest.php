@@ -12,13 +12,13 @@ class IsbnTest extends TestCase
 {
     public function testValidIsbn(): void
     {
-        $isbn = new Isbn('978-3-16-148410-0');
+        $isbn = Isbn::from('978-3-16-148410-0');
         $this->assertSame('978-3-16-148410-0', $isbn->getValue());
     }
 
     public function testInvalidIsbn(): void
     {
         $this->expectException(InvalidISBNException::class);
-        new Isbn('invalid-isbn');
+        Isbn::from('invalid-isbn');
     }
 }

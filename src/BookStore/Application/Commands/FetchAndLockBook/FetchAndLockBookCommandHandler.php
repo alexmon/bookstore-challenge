@@ -20,7 +20,7 @@ class FetchAndLockBookCommandHandler
         $this->validationService->validate($command);
 
         $book = $this->bookRepository->findById(
-            id: new BookId($command->uuid),
+            id: BookId::from($command->uuid),
             lock: true,
         );
 

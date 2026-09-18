@@ -12,11 +12,16 @@ use Ramsey\Uuid\Uuid;
  */
 class AuthorId implements \Stringable
 {
-    public function __construct(private string $id)
+    protected function __construct(private string $id)
     {
         if (!Uuid::isValid($id)) {
             throw InvalidAuthorIdException::create();
         }
+    }
+
+    public static function from(string $id): self
+    {
+        return new self($id);
     }
 
     public static function generate(): self

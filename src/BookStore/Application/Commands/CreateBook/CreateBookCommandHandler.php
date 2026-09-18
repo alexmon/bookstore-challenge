@@ -12,6 +12,7 @@ use BookStoreAPI\BookStore\Domain\Models\AuthorRepository;
 use BookStoreAPI\BookStore\Domain\Models\BookEntity;
 use BookStoreAPI\BookStore\Domain\Models\BookId;
 use BookStoreAPI\BookStore\Domain\Models\BookRepository;
+use BookStoreAPI\BookStore\Domain\Services\BookEntityBuilder;
 use BookStoreAPI\SharedKernel\Domain\Exceptions\InvalidISBNException;
 use BookStoreAPI\SharedKernel\Domain\Exceptions\ValidationException;
 use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
@@ -33,19 +34,23 @@ readonly class CreateBookCommandHandler
         $this->validationService->validate($command);
 
         $author = $this->authorRepository->findById(
-            new AuthorId($command->authorUuid)
+            AuthorId::from($command->authorUuid)
         );
 
         if (null === $author) {
             throw AuthorNotFoundException::create();
         }
 
-        $book = new BookEntity(
+        $bookEntityBuilder = new BookEntityBuilder(
             BookId::generate(),
             $command->title,
-            new Isbn($command->isbn),
-            $author,
+            Isbn::from($command->isbn),
+            true
         );
+        $book = $bookEntityBuilder
+            ->setAuthor($author)
+            ->setCreatedAtNow()
+            ->build();
 
         $this->bookRepository->save($book);
 

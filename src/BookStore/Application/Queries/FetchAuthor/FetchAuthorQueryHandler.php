@@ -26,6 +26,6 @@ class FetchAuthorQueryHandler
     {
         $this->validationService->validate($query);
 
-        return $this->authorRepository->findById(new AuthorId($query->uuid));
+        return $this->authorRepository->findById(AuthorId::from($query->uuid));
     }
 }

@@ -20,7 +20,7 @@ class EloquentAdapterAuthorRepository implements AuthorRepository
         $authorEntities = [];
         foreach ($authors as $author) {
             $authorEntities[] = new AuthorEntity(
-                new AuthorId($author->uuid),
+                AuthorId::from($author->uuid),
                 $author->name,
                 \DateTimeImmutable::createFromInterface($author->created_at),
                 \DateTimeImmutable::createFromInterface($author->updated_at),
@@ -36,7 +36,7 @@ class EloquentAdapterAuthorRepository implements AuthorRepository
             return null;
         }
         return new AuthorEntity(
-            new AuthorId($author->uuid),
+            AuthorId::from($author->uuid),
             $author->name,
             \DateTimeImmutable::createFromInterface($author->created_at),
             \DateTimeImmutable::createFromInterface($author->updated_at),

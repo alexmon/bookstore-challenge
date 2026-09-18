@@ -26,6 +26,6 @@ class FetchBookQueryHandler
     {
         $this->validationService->validate($query);
 
-        return $this->bookRepository->findById(new BookId($query->uuid));
+        return $this->bookRepository->findById(BookId::from($query->uuid));
     }
 }

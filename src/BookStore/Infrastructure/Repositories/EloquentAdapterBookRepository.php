@@ -17,6 +17,7 @@ use BookStoreAPI\BookStore\Domain\Models\BookId;
 use BookStoreAPI\BookStore\Domain\Models\BookRepository;
 use BookStoreAPI\BookStore\Domain\Models\BorrowerEntity;
 use BookStoreAPI\BookStore\Domain\Models\BorrowerId;
+use BookStoreAPI\BookStore\Domain\Services\BookEntityBuilder;
 use BookStoreAPI\SharedKernel\Domain\Models\Isbn;
 
 class EloquentAdapterBookRepository implements BookRepository
@@ -59,21 +60,24 @@ class EloquentAdapterBookRepository implements BookRepository
         foreach ($books->items() as $book) {
             $authorEntity = $book->author
                 ? new AuthorEntity(
-                    new AuthorId($book->author->uuid),
+                    AuthorId::from($book->author->uuid),
                     $book->author->name
                 )
                 : null;
 
-            $bookEntities[] = new BookEntity(
-                new BookId($book->uuid),
+            $bookEntityBuilder = new BookEntityBuilder(
+                BookId::from($book->uuid),
                 $book->title,
-                new Isbn($book->isbn),
-                $authorEntity,
-                (bool) $book->is_active,
-                $book->borrower ? new BorrowerEntity(new BorrowerId($book->borrower->uuid), $book->borrower->name) : null,
-                \DateTimeImmutable::createFromInterface($book->created_at),
-                \DateTimeImmutable::createFromInterface($book->updated_at),
+                Isbn::from($book->isbn),
+                (bool) $book->is_active
             );
+            $bookEntityBuilder
+                ->setAuthor($authorEntity)
+                ->setBorrower($book->borrower ? new BorrowerEntity(BorrowerId::from($book->borrower->uuid), $book->borrower->name) : null)
+                ->setCreatedAt(\DateTimeImmutable::createFromInterface($book->created_at))
+                ->setUpdatedAt(\DateTimeImmutable::createFromInterface($book->updated_at));
+
+            $bookEntities[] = $bookEntityBuilder->build();
         }
 
         return [
@@ -100,21 +104,26 @@ class EloquentAdapterBookRepository implements BookRepository
 
         $authorEntity = $book->author
             ? new AuthorEntity(
-                new AuthorId($book->author->uuid),
+                AuthorId::from($book->author->uuid),
                 $book->author->name
             )
             : null;
 
-        return new BookEntity(
-            new BookId($book->uuid),
+        $bookEntityBuilder = new BookEntityBuilder(
+            BookId::from($book->uuid),
             $book->title,
-            new Isbn($book->isbn),
-            $authorEntity,
-            (bool) $book->is_active,
-            $book->borrower ? new BorrowerEntity(new BorrowerId($book->borrower->uuid), $book->borrower->name) : null,
-            \DateTimeImmutable::createFromInterface($book->created_at),
-            \DateTimeImmutable::createFromInterface($book->updated_at),
+            Isbn::from($book->isbn),
+            (bool) $book->is_active
         );
+        $bookEntityBuilder
+            ->setAuthor($authorEntity)
+            ->setBorrower($book->borrower ? new BorrowerEntity(BorrowerId::from($book->borrower->uuid), $book->borrower->name) : null)
+            ->setCreatedAt(\DateTimeImmutable::createFromInterface($book->created_at));
+        if ($book->updated_at !== null) {
+            $bookEntityBuilder->setUpdatedAt(\DateTimeImmutable::createFromInterface($book->updated_at));
+        }
+
+        return $bookEntityBuilder->build();
     }
 
     public function save(BookEntity $book): void

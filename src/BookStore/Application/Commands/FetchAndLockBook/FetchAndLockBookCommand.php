@@ -12,7 +12,6 @@ class FetchAndLockBookCommand extends Command
     public function __construct(
         #[Assert\NotBlank]
         #[Assert\Uuid]
-        #[Assert\NotNull]
         public readonly string $uuid,
     ) {}
 }
